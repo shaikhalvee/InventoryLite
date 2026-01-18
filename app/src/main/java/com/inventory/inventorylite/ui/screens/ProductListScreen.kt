@@ -20,6 +20,7 @@ import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.material3.TextField
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
@@ -43,12 +44,20 @@ fun ProductListScreen(
     var q by remember { mutableStateOf("") }
 
     Scaffold(
-        topBar = { TopAppBar(title = { Text("Products") }) },
+        topBar = {
+            TopAppBar(
+                title = { Text("Products") },
+                actions = {
+                    TextButton(onClick = { vm.signOut() }) { Text("Logout") }
+                }
+            )
+                 },
         floatingActionButton = {
             FloatingActionButton(onClick = onAddProduct) {
                 Icon(Icons.Default.Add, contentDescription = "Add")
             }
         }
+
     ) { pad ->
         Column(
             modifier = Modifier

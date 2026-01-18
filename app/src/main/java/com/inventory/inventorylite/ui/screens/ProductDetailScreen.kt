@@ -88,9 +88,19 @@ fun ProductDetailScreen(
             text = { Text("This will also delete its movement history.") },
             confirmButton = {
                 TextButton(onClick = {
-                    vm.deleteProduct(productId)
-                    showDelete = false
-                    onBack()
+                    vm.deleteProduct(productId, onResult = { res ->
+                        when (res) {
+                            is OpResult.Ok -> {
+                                error = null
+                                showDelete = false
+                                onBack()
+                            }
+                            is OpResult.Error -> {
+                                error = res.message
+                                showDelete = false
+                            }
+                        }
+                    })
                 }) { Text("Delete") }
             },
             dismissButton = {

@@ -10,18 +10,32 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 
 @Database(
-    entities = [ProductEntity::class, StockMovementEntity::class],
-    version = 1,
+    entities = [
+        ProductEntity::class,
+        StockMovementEntity::class,
+        UserEntity::class,
+        SessionEntity::class
+    ],
+    version = 2,
     exportSchema = false
 )
 @TypeConverters(Converters::class)
 abstract class AppDatabase : RoomDatabase() {
     abstract fun inventoryDao(): InventoryDao
+    abstract fun authDao(): AuthDao
+
+//    companion object {
+//        fun build(context: Context): AppDatabase {
+//            return Room.databaseBuilder(context, AppDatabase::class.java, "inventorylite.db")
+//                .addCallback(SeedCallback(context.applicationContext))
+//                .build()
+//        }
+//    }
 
     companion object {
         fun build(context: Context): AppDatabase {
             return Room.databaseBuilder(context, AppDatabase::class.java, "inventorylite.db")
-                .addCallback(SeedCallback(context.applicationContext))
+                .fallbackToDestructiveMigration()
                 .build()
         }
     }

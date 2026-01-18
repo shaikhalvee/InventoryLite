@@ -8,4 +8,10 @@ class Converters {
 
     @TypeConverter
     fun fromMovementType(value: MovementType): String = value.name
+
+    @TypeConverter
+    fun toRole(value: String): Role = Role.valueOf(value)
+
+    @TypeConverter
+    fun fromRole(value: Role): String = value.name
 }

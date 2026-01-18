@@ -16,6 +16,9 @@ import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
+import com.inventory.inventorylite.data.AuthRepository
+import com.inventory.inventorylite.data.Role
+import com.inventory.inventorylite.data.SessionUser
 
 data class ProductDraft(
     val id: Long? = null,
@@ -37,6 +40,7 @@ class InventoryViewModel(
 ) : ViewModel() {
 
     private val search = MutableStateFlow("")
+    private val authRepo: AuthRepository = AppGraph.auth
 
     val products = repo.observeProductsWithStock()
         .combine(search) { list, q ->
@@ -48,6 +52,44 @@ class InventoryViewModel(
         }
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), emptyList())
 
+    val sessionUser = authRepo.observeSessionUser()
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), null)
+
+    fun signIn(username: String, password: CharArray, onResult: (OpResult) -> Unit) {
+        viewModelScope.launch {
+            try {
+                authRepo.signIn(username, password)
+                onResult(OpResult.Ok)
+            } catch (e: Exception) {
+                onResult(OpResult.Error(e.message ?: "Login failed"))
+            }
+        }
+    }
+
+    fun signOut() {
+        viewModelScope.launch { authRepo.signOut() }
+    }
+
+    fun observeUsers() = authRepo.observeUsers()
+
+    fun createUser(username: String, password: CharArray, role: Role, onResult: (OpResult) -> Unit) {
+        viewModelScope.launch {
+            try {
+                val currentRole = sessionUser.value?.role
+                authRepo.createUser(currentRole ?: Role.VIEWER, username, password, role)
+                onResult(OpResult.Ok)
+            } catch (e: Exception) {
+                onResult(OpResult.Error(e.message ?: "Create user failed"))
+            }
+        }
+    }
+
+    private fun requireRole(vararg allowed: Role): Role {
+        val r = sessionUser.value?.role ?: throw IllegalStateException("Not authenticated")
+        if (!allowed.contains(r)) throw IllegalStateException("Not authorized")
+        return r
+    }
+
     fun setSearchQuery(q: String) {
         search.value = q
     }
@@ -58,14 +100,22 @@ class InventoryViewModel(
     fun observeMovements(productId: Long): Flow<List<StockMovementEntity>> =
         repo.observeMovements(productId)
 
-    fun deleteProduct(productId: Long) {
+    fun deleteProduct(productId: Long, onResult: (OpResult) -> Unit) {
         viewModelScope.launch {
-            val entity = repo.getProductById(productId) ?: return@launch
-            repo.deleteProduct(entity)
+            try {
+                requireRole(Role.ADMIN)
+                val entity = repo.getProductById(productId) ?: return@launch
+                repo.deleteProduct(entity)
+                onResult(OpResult.Ok)
+            } catch (e: Exception) {
+                onResult(OpResult.Error(e.message ?: "Delete failed"))
+            }
         }
     }
 
     fun saveProduct(draft: ProductDraft, onResult: (OpResult) -> Unit) {
+        try { requireRole(Role.ADMIN) } catch (e: Exception) { onResult(OpResult.Error(e.message!!)); return }
+
         viewModelScope.launch {
             val sku = draft.sku.trim()
             val name = draft.name.trim()
@@ -137,6 +187,8 @@ class InventoryViewModel(
         onResult: (OpResult) -> Unit
     ) {
         viewModelScope.launch {
+            try { requireRole(Role.ADMIN, Role.CLERK) } catch (e: Exception) { onResult(OpResult.Error(e.message!!)); return@launch }
+
             if (type != MovementType.ADJUST && quantityRaw <= 0) {
                 onResult(OpResult.Error("Quantity must be > 0 for IN/OUT."))
                 return@launch

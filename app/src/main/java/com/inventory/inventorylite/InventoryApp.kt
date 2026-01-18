@@ -10,16 +10,33 @@ import com.inventory.inventorylite.ui.InventoryViewModel
 import com.inventory.inventorylite.ui.screens.AddEditProductScreen
 import com.inventory.inventorylite.ui.screens.ProductDetailScreen
 import com.inventory.inventorylite.ui.screens.ProductListScreen
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.inventory.inventorylite.ui.screens.LoginScreen
 
 private object Routes {
     const val PRODUCTS = "products"
     const val PRODUCT_DETAIL = "product/{id}"
     const val PRODUCT_EDIT = "product/edit/{id}"
     const val PRODUCT_NEW = "product/new"
+
+    const val USERS = "users"
+
+    const val USER_NEW = "user/new"
 }
 
 @Composable
 fun InventoryApp(vm: InventoryViewModel) {
+    val session = vm.sessionUser.collectAsStateWithLifecycle().value
+    if (session?.userId == null) {
+        LoginScreen(vm)
+    } else {
+        // existing NavHost (Products / Detail / AddEdit etc.)
+        AuthenticatedNav(vm)
+    }
+}
+
+@Composable
+fun AuthenticatedNav(vm: InventoryViewModel) {
     val nav = rememberNavController()
 
     NavHost(navController = nav, startDestination = Routes.PRODUCTS) {
