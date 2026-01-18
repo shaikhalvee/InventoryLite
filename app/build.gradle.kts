@@ -6,11 +6,11 @@ plugins {
 }
 
 android {
-    namespace = "com.example.inventorylite"
+    namespace = "com.inventory.inventorylite"
     compileSdk = 35
 
     defaultConfig {
-        applicationId = "com.example.inventorylite"
+        applicationId = "com.inventory.inventorylite"
         minSdk = 26
         targetSdk = 35
         versionCode = 1
