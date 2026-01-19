@@ -12,6 +12,7 @@ import com.inventory.inventorylite.ui.screens.ProductDetailScreen
 import com.inventory.inventorylite.ui.screens.ProductListScreen
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.inventory.inventorylite.ui.screens.LoginScreen
+import com.inventory.inventorylite.ui.screens.UsersScreen
 
 private object Routes {
     const val PRODUCTS = "products"
@@ -44,7 +45,8 @@ fun AuthenticatedNav(vm: InventoryViewModel) {
             ProductListScreen(
                 vm = vm,
                 onOpenProduct = { id -> nav.navigate("product/$id") },
-                onAddProduct = { nav.navigate(Routes.PRODUCT_NEW) }
+                onAddProduct = { nav.navigate(Routes.PRODUCT_NEW) },
+                onOpenUsers = { nav.navigate("users") }
             )
         }
 
@@ -81,6 +83,10 @@ fun AuthenticatedNav(vm: InventoryViewModel) {
                 onDone = { nav.popBackStack() },
                 onCancel = { nav.popBackStack() }
             )
+        }
+
+        composable(Routes.USERS) {
+            UsersScreen(vm = vm, onBack = {nav.popBackStack()})
         }
     }
 }

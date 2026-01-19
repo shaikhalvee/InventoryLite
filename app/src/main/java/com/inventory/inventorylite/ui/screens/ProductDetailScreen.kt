@@ -14,23 +14,25 @@ import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.inventory.inventorylite.data.MovementType
+import com.inventory.inventorylite.data.ProductWithStock
+import com.inventory.inventorylite.data.StockMovementEntity
 import com.inventory.inventorylite.ui.InventoryViewModel
 import com.inventory.inventorylite.ui.OpResult
 
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ProductDetailScreen(
     vm: InventoryViewModel,
@@ -44,6 +46,28 @@ fun ProductDetailScreen(
     val product by productFlow.collectAsStateWithLifecycle(initialValue = null)
     val movements by movementsFlow.collectAsStateWithLifecycle(initialValue = emptyList())
 
+    ProductDetailContent(
+        product = product,
+        movements = movements,
+        onBack = onBack,
+        onEdit = onEdit,
+        onDeleteProduct = { vm.deleteProduct(productId, it) },
+        onAddMovement = { type, qty, note, callback ->
+            vm.addMovement(productId, type, qty, note, callback)
+        }
+    )
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun ProductDetailContent(
+    product: ProductWithStock?,
+    movements: List<StockMovementEntity>,
+    onBack: () -> Unit,
+    onEdit: () -> Unit,
+    onDeleteProduct: ((OpResult) -> Unit) -> Unit,
+    onAddMovement: (MovementType, Int, String, (OpResult) -> Unit) -> Unit
+) {
     var showDelete by remember { mutableStateOf(false) }
     var movementType by remember { mutableStateOf<MovementType?>(null) }
     var error by remember { mutableStateOf<String?>(null) }
@@ -61,14 +85,12 @@ fun ProductDetailScreen(
         return
     }
 
-    val p = product!!
-
     if (movementType != null) {
         MovementDialog(
             type = movementType!!,
             onDismiss = { movementType = null },
             onSubmit = { qty, note ->
-                vm.addMovement(productId, movementType!!, qty, note) { res ->
+                onAddMovement(movementType!!, qty, note) { res ->
                     when (res) {
                         is OpResult.Ok -> {
                             movementType = null
@@ -88,7 +110,7 @@ fun ProductDetailScreen(
             text = { Text("This will also delete its movement history.") },
             confirmButton = {
                 TextButton(onClick = {
-                    vm.deleteProduct(productId, onResult = { res ->
+                    onDeleteProduct { res ->
                         when (res) {
                             is OpResult.Ok -> {
                                 error = null
@@ -100,7 +122,7 @@ fun ProductDetailScreen(
                                 showDelete = false
                             }
                         }
-                    })
+                    }
                 }) { Text("Delete") }
             },
             dismissButton = {
@@ -110,7 +132,7 @@ fun ProductDetailScreen(
     }
 
     Scaffold(
-        topBar = { TopAppBar(title = { Text(p.name) }) }
+        topBar = { TopAppBar(title = { Text(product.name) }) }
     ) { pad ->
         Column(
             modifier = Modifier
@@ -118,10 +140,10 @@ fun ProductDetailScreen(
                 .padding(pad)
                 .padding(12.dp)
         ) {
-            Text("SKU: ${p.sku}")
-            Text("Stock on hand: ${p.stockOnHand}")
-            if (p.reorderPoint > 0) Text("Reorder point: ${p.reorderPoint}")
-            if (p.description.isNotBlank()) Text("Notes: ${p.description}")
+            Text("SKU: ${product.sku}")
+            Text("Stock on hand: ${product.stockOnHand}")
+            if (product.reorderPoint > 0) Text("Reorder point: ${product.reorderPoint}")
+            if (product.description.isNotBlank()) Text("Notes: ${product.description}")
             Spacer(Modifier.height(12.dp))
 
             Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(10.dp)) {
@@ -163,3 +185,31 @@ fun ProductDetailScreen(
     }
 }
 
+@Preview(showBackground = true)
+@Composable
+fun ProductDetailPreview() {
+    Surface {
+        ProductDetailContent(
+            product = ProductWithStock(
+                id = 1,
+                sku = "LAPTOP-001",
+                name = "MacBook Air M2",
+                description = "Silver, 16GB RAM, 512GB SSD",
+                unitCost = 1200.0,
+                reorderPoint = 5,
+                isActive = true,
+                createdAtEpochMs = 0,
+                updatedAtEpochMs = 0,
+                stockOnHand = 12
+            ),
+            movements = listOf(
+                StockMovementEntity(1, 1, MovementType.IN, 15, "Initial stock", 0),
+                StockMovementEntity(2, 1, MovementType.OUT, 3, "Sold to customer", 0),
+            ),
+            onBack = {},
+            onEdit = {},
+            onDeleteProduct = {},
+            onAddMovement = { _, _, _, _ -> }
+        )
+    }
+}
