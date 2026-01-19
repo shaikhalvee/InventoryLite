@@ -2,17 +2,24 @@ package com.inventory.inventorylite.ui.screens
 
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material3.Button
+import androidx.compose.material3.Card
+import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextField
 import androidx.compose.material3.TopAppBar
+import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -128,67 +135,105 @@ fun AddEditProductContent(
     }
 
     Scaffold(
-        topBar = { TopAppBar(title = { Text(title) }) }
+        topBar = {
+            TopAppBar(
+                title = { Text(title) },
+                colors = TopAppBarDefaults.topAppBarColors(
+                    containerColor = MaterialTheme.colorScheme.surface,
+                    titleContentColor = MaterialTheme.colorScheme.onSurface
+                ),
+                navigationIcon = {
+                    androidx.compose.material3.Icon(
+                        imageVector = Icons.Default.Edit,
+                        contentDescription = null,
+                        tint = MaterialTheme.colorScheme.primary
+                    )
+                }
+            )
+        }
     ) { pad ->
-        Column(
-            modifier = Modifier
-                .padding(pad)
-                .padding(12.dp)
+        Surface(
+            modifier = Modifier.fillMaxSize(),
+            color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.35f)
         ) {
-            TextField(
-                value = sku,
-                onValueChange = onSkuChange,
-                label = { Text("SKU (unique)") },
-                modifier = Modifier.fillMaxWidth(),
-                singleLine = true
-            )
-            TextField(
-                value = name,
-                onValueChange = onNameChange,
-                label = { Text("Name") },
-                modifier = Modifier.fillMaxWidth().then(shiftEnterModifier)
-            )
-            TextField(
-                value = description,
-                onValueChange = onDescriptionChange,
-                label = { Text("Description / notes") },
-                modifier = Modifier.fillMaxWidth().then(shiftEnterModifier)
-            )
-            TextField(
-                value = unitCost,
-                onValueChange = onUnitCostChange,
-                label = { Text("Unit cost") },
-                modifier = Modifier.fillMaxWidth(),
-                singleLine = true,
-                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number)
-            )
-            TextField(
-                value = reorderPoint,
-                onValueChange = onReorderPointChange,
-                label = { Text("Reorder point") },
-                modifier = Modifier.fillMaxWidth(),
-                singleLine = true,
-                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number)
-            )
-
-            if (error != null) {
-                Spacer(Modifier.height(10.dp))
-                Text("Error: $error", color = androidx.compose.material3.MaterialTheme.colorScheme.error)
-            }
-
-            Spacer(Modifier.height(12.dp))
-
-            Button(
-                onClick = onSave,
-                modifier = Modifier.fillMaxWidth()
+            Column(
+                modifier = Modifier
+                    .padding(pad)
+                    .padding(16.dp)
             ) {
-                Text("Save")
-            }
+                Card(
+                    colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface)
+                ) {
+                    Column(
+                        modifier = Modifier.padding(16.dp),
+                        verticalArrangement = androidx.compose.foundation.layout.Arrangement.spacedBy(12.dp)
+                    ) {
+                        OutlinedTextField(
+                            value = sku,
+                            onValueChange = onSkuChange,
+                            label = { Text("SKU (unique)") },
+                            modifier = Modifier.fillMaxWidth(),
+                            singleLine = true,
+                            shape = MaterialTheme.shapes.medium
+                        )
+                        OutlinedTextField(
+                            value = name,
+                            onValueChange = onNameChange,
+                            label = { Text("Name") },
+                            modifier = Modifier.fillMaxWidth().then(shiftEnterModifier),
+                            shape = MaterialTheme.shapes.medium
+                        )
+                        OutlinedTextField(
+                            value = description,
+                            onValueChange = onDescriptionChange,
+                            label = { Text("Description / notes") },
+                            modifier = Modifier.fillMaxWidth().then(shiftEnterModifier),
+                            shape = MaterialTheme.shapes.medium
+                        )
+                        OutlinedTextField(
+                            value = unitCost,
+                            onValueChange = onUnitCostChange,
+                            label = { Text("Unit cost") },
+                            modifier = Modifier.fillMaxWidth(),
+                            singleLine = true,
+                            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+                            shape = MaterialTheme.shapes.medium
+                        )
+                        OutlinedTextField(
+                            value = reorderPoint,
+                            onValueChange = onReorderPointChange,
+                            label = { Text("Reorder point") },
+                            modifier = Modifier.fillMaxWidth(),
+                            singleLine = true,
+                            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+                            shape = MaterialTheme.shapes.medium
+                        )
+                    }
+                }
 
-            Spacer(Modifier.height(8.dp))
+                if (error != null) {
+                    Spacer(Modifier.height(10.dp))
+                    Text(
+                        "Error: $error",
+                        color = MaterialTheme.colorScheme.error,
+                        style = MaterialTheme.typography.bodySmall
+                    )
+                }
 
-            Button(onClick = onCancel, modifier = Modifier.fillMaxWidth()) {
-                Text("Cancel")
+                Spacer(Modifier.height(16.dp))
+
+                Button(
+                    onClick = onSave,
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+                    Text("Save")
+                }
+
+                Spacer(Modifier.height(8.dp))
+
+                Button(onClick = onCancel, modifier = Modifier.fillMaxWidth()) {
+                    Text("Cancel")
+                }
             }
         }
     }
