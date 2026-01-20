@@ -6,6 +6,8 @@ import kotlinx.coroutines.flow.Flow
 class AuthRepository(private val dao: AuthDao) {
 
     fun observeSessionUser(): Flow<SessionUser?> = dao.observeSessionUser()
+    
+    // Returns the sanitized User model for UI usage
     fun observeUsers(): Flow<List<UserEntity>> = dao.observeUsers()
 
     suspend fun ensureDefaultAdmin() {

@@ -13,7 +13,6 @@ import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
-import androidx.compose.material3.Divider
 import androidx.compose.material3.ElevatedCard
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FilterChip
@@ -40,6 +39,7 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.inventory.inventorylite.data.Role
 import com.inventory.inventorylite.data.User
+import com.inventory.inventorylite.data.UserEntity
 import com.inventory.inventorylite.ui.InventoryViewModel
 import com.inventory.inventorylite.ui.OpResult
 
@@ -241,9 +241,9 @@ fun UsersContent(
 @Composable
 fun UsersScreenPreview() {
     val mockUsers = listOf(
-        User(1, "admin", charArrayOf(), Role.ADMIN, true),
-        User(2, "clerk_joe", charArrayOf(), Role.CLERK, true),
-        User(3, "viewer_1", charArrayOf(), Role.VIEWER, true)
+        User(1, "admin", Role.ADMIN, true),
+        User(2, "clerk_joe", Role.CLERK, true),
+        User(3, "viewer_1", Role.VIEWER, true)
     )
     MaterialTheme {
         UsersContent(
