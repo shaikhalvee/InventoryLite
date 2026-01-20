@@ -1,6 +1,7 @@
 package com.inventory.inventorylite.ui.screens
 
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Inventory
 import androidx.compose.material.icons.filled.Visibility
@@ -10,6 +11,7 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.text.style.TextAlign
@@ -91,7 +93,11 @@ fun LoginContent(
                         label = { Text("Username") },
                         modifier = Modifier.fillMaxWidth(),
                         singleLine = true,
-                        shape = MaterialTheme.shapes.medium
+                        shape = MaterialTheme.shapes.medium,
+                        keyboardOptions = KeyboardOptions(
+                            autoCorrect = false,
+                            imeAction = ImeAction.Next
+                        )
                     )
 
                     OutlinedTextField(

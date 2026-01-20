@@ -22,6 +22,16 @@ data class UserEntity(
 )
 
 /**
+ * UI model for a User to avoid passing around hashes and salts.
+ */
+data class User(
+    val id: Long,
+    val username: String,
+    val role: Role,
+    val isActive: Boolean
+)
+
+/**
  * Single-row session table (id is always 1).
  * If currentUserId is null => logged out.
  */

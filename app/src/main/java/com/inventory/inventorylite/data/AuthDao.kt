@@ -25,8 +25,8 @@ interface AuthDao {
     @Query("SELECT COUNT(*) FROM users")
     suspend fun userCount(): Int
 
-    @Query("SELECT * FROM users ORDER BY username COLLATE NOCASE")
-    fun observeUsers(): Flow<List<UserEntity>>
+    @Query("SELECT id, username, role, isActive FROM users ORDER BY username COLLATE NOCASE")
+    fun observeUsers(): Flow<List<User>>
 
     // Session
     @Insert(onConflict = OnConflictStrategy.REPLACE)

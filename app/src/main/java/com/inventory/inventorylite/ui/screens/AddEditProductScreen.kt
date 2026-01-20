@@ -1,19 +1,32 @@
 package com.inventory.inventorylite.ui.screens
 
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Edit
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.filled.AttachMoney
+import androidx.compose.material.icons.filled.Description
+import androidx.compose.material.icons.filled.Inventory
+import androidx.compose.material.icons.filled.NotificationImportant
+import androidx.compose.material.icons.filled.QrCode
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
@@ -26,6 +39,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.input.key.Key
 import androidx.compose.ui.input.key.KeyEventType
@@ -33,6 +47,8 @@ import androidx.compose.ui.input.key.isShiftPressed
 import androidx.compose.ui.input.key.key
 import androidx.compose.ui.input.key.onPreviewKeyEvent
 import androidx.compose.ui.input.key.type
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
@@ -71,7 +87,7 @@ fun AddEditProductScreen(
     }
 
     AddEditProductContent(
-        title = if (productId == null) "Add product" else "Edit product",
+        title = if (productId == null) "Add Product" else "Edit Product",
         sku = sku,
         onSkuChange = { sku = it },
         name = name,
@@ -127,113 +143,188 @@ fun AddEditProductContent(
     onSave: () -> Unit,
     onCancel: () -> Unit
 ) {
+    val scrollState = rememberScrollState()
+
     // Helper to block Enter unless Shift is held
     val shiftEnterModifier = Modifier.onPreviewKeyEvent {
         if (it.key == Key.Enter && it.type == KeyEventType.KeyDown) {
-            !it.isShiftPressed // Return true (handled) if shift is NOT pressed
+            !it.isShiftPressed
         } else false
     }
 
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text(title) },
+                title = { 
+                    Text(
+                        text = title,
+                        style = MaterialTheme.typography.titleLarge,
+                        fontWeight = FontWeight.Bold
+                    ) 
+                },
+                navigationIcon = {
+                    IconButton(onClick = onCancel) {
+                        Icon(
+                            imageVector = Icons.AutoMirrored.Filled.ArrowBack,
+                            contentDescription = "Back"
+                        )
+                    }
+                },
                 colors = TopAppBarDefaults.topAppBarColors(
                     containerColor = MaterialTheme.colorScheme.surface,
-                    titleContentColor = MaterialTheme.colorScheme.onSurface
-                ),
-                navigationIcon = {
-                    androidx.compose.material3.Icon(
-                        imageVector = Icons.Default.Edit,
-                        contentDescription = null,
-                        tint = MaterialTheme.colorScheme.primary
-                    )
-                }
+                    titleContentColor = MaterialTheme.colorScheme.onSurface,
+                    navigationIconContentColor = MaterialTheme.colorScheme.onSurface
+                )
             )
         }
     ) { pad ->
         Surface(
             modifier = Modifier.fillMaxSize(),
-            color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.35f)
+            color = MaterialTheme.colorScheme.background
         ) {
             Column(
                 modifier = Modifier
                     .padding(pad)
                     .padding(16.dp)
+                    .verticalScroll(scrollState)
             ) {
                 Card(
+                    modifier = Modifier.fillMaxWidth(),
+                    elevation = CardDefaults.cardElevation(defaultElevation = 2.dp),
                     colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface)
                 ) {
                     Column(
                         modifier = Modifier.padding(16.dp),
-                        verticalArrangement = androidx.compose.foundation.layout.Arrangement.spacedBy(12.dp)
+                        verticalArrangement = Arrangement.spacedBy(16.dp)
                     ) {
+                        Text(
+                            text = "Product Details",
+                            style = MaterialTheme.typography.titleMedium,
+                            color = MaterialTheme.colorScheme.primary,
+                            fontWeight = FontWeight.SemiBold
+                        )
+
                         OutlinedTextField(
                             value = sku,
                             onValueChange = onSkuChange,
                             label = { Text("SKU (unique)") },
                             modifier = Modifier.fillMaxWidth(),
+                            leadingIcon = { Icon(Icons.Default.QrCode, contentDescription = null) },
                             singleLine = true,
-                            shape = MaterialTheme.shapes.medium
+                            shape = MaterialTheme.shapes.medium,
+                            keyboardOptions = KeyboardOptions(
+                                autoCorrect = false,
+                                imeAction = ImeAction.Next
+                            )
                         )
+
                         OutlinedTextField(
                             value = name,
                             onValueChange = onNameChange,
-                            label = { Text("Name") },
-                            modifier = Modifier.fillMaxWidth().then(shiftEnterModifier),
-                            shape = MaterialTheme.shapes.medium
+                            label = { Text("Product Name") },
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .then(shiftEnterModifier),
+                            leadingIcon = { Icon(Icons.Default.Inventory, contentDescription = null) },
+                            shape = MaterialTheme.shapes.medium,
+                            keyboardOptions = KeyboardOptions(
+                                autoCorrect = false,
+                                imeAction = ImeAction.Next
+                            )
                         )
+
                         OutlinedTextField(
                             value = description,
                             onValueChange = onDescriptionChange,
-                            label = { Text("Description / notes") },
-                            modifier = Modifier.fillMaxWidth().then(shiftEnterModifier),
-                            shape = MaterialTheme.shapes.medium
+                            label = { Text("Description / Notes") },
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .then(shiftEnterModifier),
+                            leadingIcon = { Icon(Icons.Default.Description, contentDescription = null) },
+                            shape = MaterialTheme.shapes.medium,
+                            minLines = 3,
+                            keyboardOptions = KeyboardOptions(
+                                autoCorrect = false
+                            )
                         )
-                        OutlinedTextField(
-                            value = unitCost,
-                            onValueChange = onUnitCostChange,
-                            label = { Text("Unit cost") },
+
+                        Row(
                             modifier = Modifier.fillMaxWidth(),
-                            singleLine = true,
-                            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
-                            shape = MaterialTheme.shapes.medium
-                        )
-                        OutlinedTextField(
-                            value = reorderPoint,
-                            onValueChange = onReorderPointChange,
-                            label = { Text("Reorder point") },
-                            modifier = Modifier.fillMaxWidth(),
-                            singleLine = true,
-                            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
-                            shape = MaterialTheme.shapes.medium
-                        )
+                            horizontalArrangement = Arrangement.spacedBy(16.dp)
+                        ) {
+                            OutlinedTextField(
+                                value = unitCost,
+                                onValueChange = onUnitCostChange,
+                                label = { Text("Unit Cost") },
+                                modifier = Modifier.weight(1f),
+                                leadingIcon = { Icon(Icons.Default.AttachMoney, contentDescription = null, modifier = Modifier.size(20.dp)) },
+                                singleLine = true,
+                                keyboardOptions = KeyboardOptions(
+                                    keyboardType = KeyboardType.Decimal,
+                                    autoCorrect = false,
+                                    imeAction = ImeAction.Next
+                                ),
+                                shape = MaterialTheme.shapes.medium
+                            )
+
+                            OutlinedTextField(
+                                value = reorderPoint,
+                                onValueChange = onReorderPointChange,
+                                label = { Text("Reorder Pt") },
+                                modifier = Modifier.weight(1f),
+                                leadingIcon = { Icon(Icons.Default.NotificationImportant, contentDescription = null, modifier = Modifier.size(20.dp)) },
+                                singleLine = true,
+                                keyboardOptions = KeyboardOptions(
+                                    keyboardType = KeyboardType.Number,
+                                    autoCorrect = false,
+                                    imeAction = ImeAction.Done
+                                ),
+                                shape = MaterialTheme.shapes.medium
+                            )
+                        }
                     }
                 }
 
                 if (error != null) {
-                    Spacer(Modifier.height(10.dp))
-                    Text(
-                        "Error: $error",
-                        color = MaterialTheme.colorScheme.error,
-                        style = MaterialTheme.typography.bodySmall
-                    )
+                    Spacer(Modifier.height(16.dp))
+                    Surface(
+                        color = MaterialTheme.colorScheme.errorContainer,
+                        shape = MaterialTheme.shapes.small,
+                        modifier = Modifier.fillMaxWidth()
+                    ) {
+                        Text(
+                            text = error,
+                            color = MaterialTheme.colorScheme.onErrorContainer,
+                            style = MaterialTheme.typography.bodyMedium,
+                            modifier = Modifier.padding(12.dp)
+                        )
+                    }
                 }
 
-                Spacer(Modifier.height(16.dp))
+                Spacer(Modifier.height(32.dp))
 
-                Button(
-                    onClick = onSave,
-                    modifier = Modifier.fillMaxWidth()
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.spacedBy(12.dp)
                 ) {
-                    Text("Save")
-                }
+                    OutlinedButton(
+                        onClick = onCancel,
+                        modifier = Modifier.weight(1f),
+                        shape = MaterialTheme.shapes.medium
+                    ) {
+                        Text("Cancel")
+                    }
 
-                Spacer(Modifier.height(8.dp))
-
-                Button(onClick = onCancel, modifier = Modifier.fillMaxWidth()) {
-                    Text("Cancel")
+                    Button(
+                        onClick = onSave,
+                        modifier = Modifier.weight(1f),
+                        shape = MaterialTheme.shapes.medium
+                    ) {
+                        Text("Save")
+                    }
                 }
+                
+                Spacer(Modifier.height(16.dp))
             }
         }
     }
@@ -242,20 +333,20 @@ fun AddEditProductContent(
 @Preview(showBackground = true)
 @Composable
 fun AddProductPreview() {
-    Surface {
+    MaterialTheme {
         AddEditProductContent(
-            title = "Add product",
-            sku = "",
+            title = "Add Product",
+            sku = "SKU123",
             onSkuChange = {},
-            name = "",
+            name = "Test Product",
             onNameChange = {},
-            description = "",
+            description = "This is a test description for the product.",
             onDescriptionChange = {},
-            unitCost = "0.0",
+            unitCost = "19.99",
             onUnitCostChange = {},
-            reorderPoint = "0",
+            reorderPoint = "10",
             onReorderPointChange = {},
-            error = null,
+            error = "Invalid SKU provided",
             onSave = {},
             onCancel = {}
         )
