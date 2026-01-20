@@ -40,12 +40,17 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.inventory.inventorylite.data.Role
 import com.inventory.inventorylite.data.User
 import com.inventory.inventorylite.data.UserEntity
+import com.inventory.inventorylite.data.toUser
 import com.inventory.inventorylite.ui.InventoryViewModel
 import com.inventory.inventorylite.ui.OpResult
+import kotlinx.coroutines.flow.map
 
 @Composable
 fun UsersScreen(vm: InventoryViewModel, onBack: () -> Unit) {
-    val users by vm.observeUsers().collectAsStateWithLifecycle(initialValue = emptyList())
+    val users by vm.observeUsers()
+        .map { entities -> entities.map { it.toUser() } }
+        .collectAsStateWithLifecycle(initialValue = emptyList())
+
     var username by remember { mutableStateOf("") }
     var password by remember { mutableStateOf("") }
     var role by remember { mutableStateOf(Role.VIEWER) }

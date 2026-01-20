@@ -46,3 +46,12 @@ data class SessionUser(
     val username: String?,
     val role: Role?
 )
+
+fun UserEntity.toUser(): User {
+    return User(
+        id = this.id,
+        username = this.username,
+        role = this.role,
+        isActive = this.isActive
+    )
+}

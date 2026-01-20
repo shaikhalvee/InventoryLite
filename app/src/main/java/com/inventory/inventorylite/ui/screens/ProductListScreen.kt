@@ -42,6 +42,7 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.inventory.inventorylite.data.ProductWithStock
+import com.inventory.inventorylite.data.Role
 import com.inventory.inventorylite.ui.InventoryViewModel
 
 @Composable
@@ -52,6 +53,7 @@ fun ProductListScreen(
     onOpenUsers: () -> Unit
 ) {
     val products by vm.products.collectAsStateWithLifecycle()
+    val session by vm.sessionUser.collectAsStateWithLifecycle()
     var q by remember { mutableStateOf("") }
 
     ProductListContent(
@@ -64,7 +66,9 @@ fun ProductListScreen(
         onSignOut = { vm.signOut() },
         onOpenUsers = onOpenUsers,
         onOpenProduct = onOpenProduct,
-        onAddProduct = onAddProduct
+        onAddProduct = onAddProduct,
+        canAddProduct = session?.role != Role.VIEWER,
+        canManageUsers = session?.role == Role.ADMIN
     )
 }
 
@@ -77,7 +81,9 @@ fun ProductListContent(
     onSignOut: () -> Unit,
     onOpenUsers: () -> Unit,
     onOpenProduct: (Long) -> Unit,
-    onAddProduct: () -> Unit
+    onAddProduct: () -> Unit,
+    canAddProduct: Boolean = true,
+    canManageUsers: Boolean = false
 ) {
     Scaffold(
         topBar = {
@@ -97,7 +103,9 @@ fun ProductListContent(
                 },
                 actions = {
                     TextButton(onClick = onSignOut) { Text("Logout") }
-                    TextButton(onClick = onOpenUsers) { Text("Users") }
+                    if (canManageUsers) {
+                        TextButton(onClick = onOpenUsers) { Text("Users") }
+                    }
                 },
                 colors = TopAppBarDefaults.topAppBarColors(
                     containerColor = MaterialTheme.colorScheme.surface,
@@ -106,8 +114,10 @@ fun ProductListContent(
             )
         },
         floatingActionButton = {
-            FloatingActionButton(onClick = onAddProduct) {
-                Icon(Icons.Default.Add, contentDescription = "Add")
+            if (canAddProduct) {
+                FloatingActionButton(onClick = onAddProduct) {
+                    Icon(Icons.Default.Add, contentDescription = "Add")
+                }
             }
         }
     ) { pad ->
