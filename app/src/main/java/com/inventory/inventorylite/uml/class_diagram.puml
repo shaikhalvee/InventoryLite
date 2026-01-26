@@ -1,0 +1,123 @@
+@startuml
+skinparam classAttributeIconSize 0
+skinparam packageStyle rectangle
+skinparam shadowing false
+
+package "UI / Presentation" {
+  class InventoryViewModel <<ViewModel>> {
+    +products: StateFlow<List<ProductWithStock>>
+    +sessionUser: StateFlow<SessionUser?>
+    +signIn(username, password, onResult)
+    +signOut()
+    +saveProduct(draft, onResult)
+    +deleteProduct(productId, onResult)
+    +addMovement(productId, type, qty, note, onResult)
+    +createUser(username, password, role, onResult)
+  }
+
+  class ProductDraft <<DTO>> {
+    +id: Long?
+    +sku: String
+    +name: String
+    +description: String
+    +unitCost: Double
+    +reorderPoint: Int
+    +isActive: Boolean
+  }
+}
+
+package "Domain / Policies" {
+  enum Role {
+    ADMIN
+    CLERK
+    VIEWER
+  }
+
+  enum MovementType {
+    IN
+    OUT
+    ADJUST
+  }
+
+  class Security <<crypto>> {
+    +hashPassword(password, salt): ByteArray
+    +newSalt(): ByteArray
+    +verify(password, salt, expectedHash): Boolean
+  }
+}
+
+package "Data / Persistence" {
+  abstract class AppDatabase <<RoomDatabase>> {
+    +inventoryDao(): InventoryDao
+    +authDao(): AuthDao
+  }
+
+  interface InventoryDao <<DAO>> {
+    +observeProductsWithStock(): Flow<List<ProductWithStock>>
+    +observeProductWithStock(productId): Flow<ProductWithStock?>
+    +observeMovements(productId): Flow<List<StockMovementEntity>>
+    +insertProduct(p): Long
+    +updateProduct(p)
+    +deleteProduct(p)
+    +insertMovement(m)
+  }
+
+  interface AuthDao <<DAO>> {
+    +userCount(): Int
+    +getUserByUsername(u): UserEntity?
+    +observeUsers(): Flow<List<UserEntity>>
+    +upsertSession(s)
+    +observeSessionUser(): Flow<SessionUser?>
+    +insertUser(u): Long
+  }
+
+  class InventoryRepository <<Repository>> {
+    +observeProductsWithStock(): Flow<List<ProductWithStock>>
+    +observeProductWithStock(productId): Flow<ProductWithStock?>
+    +observeMovements(productId): Flow<List<StockMovementEntity>>
+    +insertProduct(p): Long
+    +updateProduct(p)
+    +deleteProduct(p)
+    +insertMovement(m)
+  }
+
+  class AuthRepository <<Repository>> {
+    +ensureDefaultAdmin()
+    +signIn(username, password): SessionUser?
+    +signOut()
+    +createUser(username, password, role)
+    +observeSessionUser(): Flow<SessionUser?>
+    +observeUsers(): Flow<List<UserEntity>>
+  }
+
+  class ProductEntity <<Entity>>
+  class StockMovementEntity <<Entity>> {
+    +type: MovementType
+  }
+  class ProductWithStock <<QueryModel>>
+  class UserEntity <<Entity>> {
+    +role: Role
+  }
+  class SessionEntity <<Entity>>
+  class SessionUser <<QueryModel>> {
+    +role: Role?
+  }
+}
+
+InventoryViewModel --> InventoryRepository
+InventoryViewModel --> AuthRepository
+InventoryViewModel ..> ProductDraft
+InventoryViewModel ..> Role
+InventoryViewModel ..> MovementType
+
+InventoryRepository --> InventoryDao
+AuthRepository --> AuthDao
+AuthRepository --> Security
+
+AppDatabase --> InventoryDao
+AppDatabase --> AuthDao
+
+ProductEntity "1" <-- "0..*" StockMovementEntity : FK productId
+UserEntity "0..1" <-- "1" SessionEntity : currentUserId
+
+@enduml

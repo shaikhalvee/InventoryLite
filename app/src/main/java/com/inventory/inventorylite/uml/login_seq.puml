@@ -1,0 +1,34 @@
+@startuml
+title InventoryLite - Login Sequence (Session Created)
+
+actor User
+boundary LoginScreen
+control InventoryViewModel as VM
+control AuthRepository as AuthRepo
+entity AuthDao
+control Security
+
+User -> LoginScreen: Enter username + password\nTap "Sign In"
+LoginScreen -> VM: signIn(username, password)
+
+VM -> AuthRepo: signIn(username, password)
+AuthRepo -> AuthDao: getUserByUsername(username)
+AuthDao --> AuthRepo: UserEntity? (hash,salt,role,isActive)
+
+alt user not found OR isActive=false
+  AuthRepo --> VM: Error("Invalid credentials" OR "Inactive user")
+  VM --> LoginScreen: Show error message
+else user found and active
+  AuthRepo -> Security: hashPassword(password, salt)
+  Security --> AuthRepo: derivedHash
+  alt derivedHash != storedHash
+    AuthRepo --> VM: Error("Invalid credentials")
+    VM --> LoginScreen: Show error message
+  else hashes match
+    AuthRepo -> AuthDao: upsertSession(SessionEntity(id=1,currentUserId=userId))
+    AuthDao --> AuthRepo: OK
+    AuthRepo --> VM: Ok(SessionUser(userId, username, role))
+    VM --> LoginScreen: Navigate to ProductList
+  end
+end
+@enduml

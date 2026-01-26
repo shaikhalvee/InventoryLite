@@ -1,0 +1,59 @@
+@startuml
+title InventoryLite - Record Stock Movement Sequence (RBAC + SOH)
+
+actor User
+boundary ProductDetailScreen as DetailUI
+control MovementDialog as Dialog
+control InventoryViewModel as VM
+control InventoryRepository as Repo
+entity InventoryDao
+entity "Room DB" as DB
+
+User -> DetailUI: Tap "Add Movement"
+DetailUI -> Dialog: Open movement entry dialog
+User -> Dialog: Select type (IN/OUT/ADJUST)\nEnter quantity + note\nTap "Save"
+Dialog -> VM: addMovement(productId, type, quantityRaw, note)
+
+VM -> VM: Validate quantityRaw\n(parse int, non-zero)
+alt invalid quantity (non-numeric OR 0)
+  VM --> Dialog: Error("Invalid quantity")
+  Dialog --> User: Show validation error
+else valid quantity
+  VM -> VM: Check role from sessionUser
+  alt role == VIEWER OR no session
+    VM --> Dialog: Error("Not authorized")
+    Dialog --> User: Show authorization error
+  else role == CLERK OR ADMIN
+    VM -> Repo: observeProductWithStock(productId)\n(get current SOH)
+    Repo -> InventoryDao: observeProductWithStock(productId)
+    InventoryDao -> DB: SELECT ... SUM(movements) AS stockOnHand
+    DB --> InventoryDao: ProductWithStock(stockOnHand)
+    InventoryDao --> Repo: ProductWithStock
+    Repo --> VM: ProductWithStock
+
+    alt type == OUT AND (stockOnHand - qty < 0)
+      VM --> Dialog: Error("Insufficient stock")
+      Dialog --> User: Show error; movement not saved
+    else allowed
+      VM -> Repo: insertMovement(StockMovementEntity)
+      Repo -> InventoryDao: insertMovement(movement)
+      InventoryDao -> DB: INSERT stock_movement
+      DB --> InventoryDao: OK
+      InventoryDao --> Repo: OK
+      Repo --> VM: Ok
+
+      VM --> Dialog: Success
+      Dialog --> DetailUI: Close dialog
+
+      ' Reactive UI update
+      DetailUI -> Repo: observeProductWithStock(productId)
+      Repo -> InventoryDao: observeProductWithStock(productId)
+      InventoryDao -> DB: SELECT ... recompute SUM(...)
+      DB --> InventoryDao: Updated ProductWithStock(new SOH)
+      InventoryDao --> Repo: Updated ProductWithStock
+      Repo --> DetailUI: Emit updated SOH + history
+      DetailUI --> User: Display updated SOH + movement list
+    end
+  end
+end
+@enduml

@@ -1,0 +1,54 @@
+@startuml
+title InventoryLite - Create Product (Admin)
+
+actor Admin
+boundary ProductListScreen as ListUI
+boundary AddEditProductScreen as EditUI
+control InventoryViewModel as VM
+control InventoryRepository as Repo
+entity InventoryDao
+entity "Room DB" as DB
+
+Admin -> ListUI: Tap "Add Product"
+ListUI -> EditUI: Navigate to Add/Edit screen
+Admin -> EditUI: Enter SKU, Name, ReorderPoint, Cost\nTap "Save"
+EditUI -> VM: saveProduct(draft)
+
+VM -> VM: Validate fields (SKU, Name required;\nReorderPoint >= 0; Cost >= 0)
+alt validation fails
+  VM --> EditUI: Error("Validation failed")
+  EditUI --> Admin: Display error; remain on screen
+else validation OK
+  VM -> VM: Check role from sessionUser
+  alt role != ADMIN
+    VM --> EditUI: Error("Not authorized")
+    EditUI --> Admin: Display authorization error
+  else role == ADMIN
+    VM -> Repo: insertProduct(ProductEntity from draft)
+    Repo -> InventoryDao: insertProduct(product)
+    InventoryDao -> DB: INSERT INTO products ...
+    alt DB rejects (e.g., duplicate SKU unique constraint)
+      DB --> InventoryDao: ConstraintViolation
+      InventoryDao --> Repo: Error
+      Repo --> VM: Error("SKU already exists")
+      VM --> EditUI: Error("SKU already exists")
+      EditUI --> Admin: Display error; remain on screen
+    else insert succeeds
+      DB --> InventoryDao: newProductId
+      InventoryDao --> Repo: newProductId
+      Repo --> VM: Ok
+      VM --> EditUI: Success
+      EditUI --> ListUI: Navigate back to list
+
+      ' Reactive list update
+      ListUI -> Repo: observeProductsWithStock()
+      Repo -> InventoryDao: observeProductsWithStock()
+      InventoryDao -> DB: SELECT products + SUM(movements) AS stockOnHand
+      DB --> InventoryDao: updated rows
+      InventoryDao --> Repo: updated list
+      Repo --> ListUI: emit updated list
+      ListUI --> Admin: New product visible in list
+    end
+  end
+end
+@enduml
