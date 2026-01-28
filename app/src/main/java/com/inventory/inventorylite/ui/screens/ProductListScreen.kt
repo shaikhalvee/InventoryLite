@@ -17,6 +17,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Inventory2
 import androidx.compose.material.icons.filled.Search
+import androidx.compose.material3.Button
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -56,6 +57,10 @@ fun ProductListScreen(
     val session by vm.sessionUser.collectAsStateWithLifecycle()
     var q by remember { mutableStateOf("") }
 
+    val aiUi by vm.aiUi.collectAsState()
+    val filtered by vm.aiFilteredProducts.collectAsState()
+    val changes by vm.changes.collectAsState()
+
     ProductListContent(
         products = products,
         searchQuery = q,
@@ -71,6 +76,31 @@ fun ProductListScreen(
         canManageUsers = session?.role == Role.ADMIN
     )
 }
+
+@Composable
+fun AiQueryBar(
+    query: String,
+    error: String?,
+    onQueryChange: (String) -> Unit,
+    onRun: () -> Unit
+) {
+    Column {
+        OutlinedTextField(
+            value = query,
+            onValueChange = onQueryChange,
+            label = { Text("Ask inventory") },
+            placeholder = { Text("e.g., Show low-stock items under 10 units") },
+            singleLine = true
+        )
+        Row {
+            Button(onClick = onRun) { Text("Run") }
+        }
+        if (error != null) {
+            Text(text = error)
+        }
+    }
+}
+
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable

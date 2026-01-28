@@ -5,6 +5,8 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewModelScope
 import com.inventory.inventorylite.AppGraph
+import com.inventory.inventorylite.ai.AiIntent
+import com.inventory.inventorylite.ai.AiRepository
 import com.inventory.inventorylite.data.InventoryRepository
 import com.inventory.inventorylite.data.MovementType
 import com.inventory.inventorylite.data.ProductEntity
@@ -30,6 +32,19 @@ data class ProductDraft(
     val isActive: Boolean = true
 )
 
+data class AiUiState(
+    val rawQuery: String = "",
+    val lastIntent: AiIntent? = null,
+    val error: String? = null
+)
+
+data class AiChangesState(
+    val sinceEpochMs: Long? = null,
+    val movements: List<StockMovementEntity> = emptyList(),
+    val updatedProducts: List<ProductEntity> = emptyList()
+)
+
+
 sealed interface OpResult {
     data object Ok : OpResult
     data class Error(val message: String) : OpResult
@@ -37,6 +52,8 @@ sealed interface OpResult {
 
 class InventoryViewModel(
     private val repo: InventoryRepository
+//    private val authRepo: AuthRepository,
+//    private val aiRepo: AiRepository
 ) : ViewModel() {
 
     private val search = MutableStateFlow("")

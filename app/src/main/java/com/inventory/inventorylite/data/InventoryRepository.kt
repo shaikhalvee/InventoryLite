@@ -9,6 +9,13 @@ class InventoryRepository(
     fun observeProductWithStock(productId: Long): Flow<ProductWithStock?> = dao.observeProductWithStock(productId)
     fun observeMovements(productId: Long): Flow<List<StockMovementEntity>> = dao.observeMovements(productId)
 
+    fun observeMovementsSince(sinceEpochMs: Long): Flow<List<StockMovementEntity>> =
+        dao.observeMovementsSince(sinceEpochMs)
+
+    fun observeProductsUpdatedSince(sinceEpochMs: Long): Flow<List<ProductEntity>> =
+        dao.observeProductsUpdatedSince(sinceEpochMs)
+
+
     suspend fun getProductById(productId: Long): ProductEntity? = dao.getProductById(productId)
 
     suspend fun insertProduct(product: ProductEntity): Long = dao.insertProduct(product)

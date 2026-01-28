@@ -79,4 +79,21 @@ interface InventoryDao {
 
     @Insert(onConflict = OnConflictStrategy.ABORT)
     suspend fun insertMovement(movement: StockMovementEntity)
+
+    @Query("""
+        SELECT * FROM stock_movements
+        WHERE timestampEpochMs >= :sinceEpochMs
+        ORDER BY timestampEpochMs DESC
+        """
+    )
+    fun observeMovementsSince(sinceEpochMs: Long): Flow<List<StockMovementEntity>>
+
+    @Query("""
+        SELECT * FROM products
+        WHERE updatedAtEpochMs >= :sinceEpochMs
+        ORDER BY updatedAtEpochMs DESC
+        """
+    )
+    fun observeProductsUpdatedSince(sinceEpochMs: Long): Flow<List<ProductEntity>>
+
 }
